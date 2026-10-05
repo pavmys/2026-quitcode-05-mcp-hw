@@ -1,0 +1,9 @@
+{
+  "contents": [
+    {
+      "uri": "leaddesk://reference/statuses",
+      "mimeType": "text/markdown",
+      "text": "# LeadDesk lead statuses\n\n- `new` — the request just came in, nobody has contacted this lead yet. Starting status for every new submission.\n- `contacted` — a manager reached the lead (call, email, or message) and confirmed the contact is live.\n  Move here right after the first call, regardless of its outcome.\n- `qualified` — the call confirmed a real budget and a genuine need for the service: the lead is ready\n  for a commercial proposal. Never assign this status without a confirmed budget, even if the lead seems interested.\n- `won` — the client signed a deal or paid an invoice. Only the deal owner (the manager who ran the\n  negotiation) moves a lead here, after confirming payment or a signed contract.\n- `lost` — the lead declined, stopped responding for over two weeks, or didn't fit the budget/niche. Always\n  record the reason in the audit entry's `reason` field so the team can see why the deal fell through.\n"
+    }
+  ]
+}

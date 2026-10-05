@@ -1,0 +1,24 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Changed \"lead_0002\" status from \"new\" to \"contacted\". Reason: перевірка в Inspector"
+    }
+  ],
+  "structuredContent": {
+    "lead": {
+      "id": "lead_0002",
+      "company": "Rynok Books",
+      "status": "contacted",
+      "source": "webinar",
+      "budget": 500,
+      "createdAt": "2026-09-13T00:52:02.043Z"
+    },
+    "audit": {
+      "action": "status:new->contacted",
+      "leadId": "lead_0002",
+      "at": "2026-10-05T20:01:25.233Z",
+      "reason": "перевірка в Inspector"
+    }
+  }
+}
