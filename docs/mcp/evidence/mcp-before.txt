@@ -1,0 +1,41 @@
+Інструменти MCP-сервера playwright, доступні агенту в сесії Claude Code
+Дата: 2026-10-11
+Гілка: ws05/pavmys
+
+Джерело: перелік відкладених (deferred) інструментів, який сесія надала агенту.
+Жоден інструмент не викликався. Схеми (описи й параметри) не завантажувались, тому нижче лише назви.
+
+Усього: 25
+
+ 1. mcp__playwright__browser_click
+ 2. mcp__playwright__browser_close
+ 3. mcp__playwright__browser_console_messages
+ 4. mcp__playwright__browser_drag
+ 5. mcp__playwright__browser_drop
+ 6. mcp__playwright__browser_emulate_media
+ 7. mcp__playwright__browser_evaluate
+ 8. mcp__playwright__browser_file_upload
+ 9. mcp__playwright__browser_fill_form
+10. mcp__playwright__browser_find
+11. mcp__playwright__browser_handle_dialog
+12. mcp__playwright__browser_hover
+13. mcp__playwright__browser_navigate
+14. mcp__playwright__browser_navigate_back
+15. mcp__playwright__browser_network_request
+16. mcp__playwright__browser_network_requests
+17. mcp__playwright__browser_press_key
+18. mcp__playwright__browser_resize
+19. mcp__playwright__browser_run_code_unsafe
+20. mcp__playwright__browser_select_option
+21. mcp__playwright__browser_snapshot
+22. mcp__playwright__browser_tabs
+23. mcp__playwright__browser_take_screenshot
+24. mcp__playwright__browser_type
+25. mcp__playwright__browser_wait_for
+
+Примітки:
+- Інших MCP-серверів у цій сесії агенту не видно: є лише інструменти playwright.
+- Найризикованіші, якщо судити з назв:
+  - browser_run_code_unsafe і browser_evaluate виконують довільний код/JavaScript;
+  - browser_file_upload передає локальні файли в сторінку;
+  - browser_network_request / browser_network_requests відкривають доступ до мережевих запитів сторінки.

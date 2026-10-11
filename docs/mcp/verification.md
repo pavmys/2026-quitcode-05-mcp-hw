@@ -92,14 +92,31 @@ cmp materials/leads.json mcp/leaddesk-server/fixtures/leads.json && echo "fixtur
   застосунку `db:listUsers: 1`; маршрути `/`, `/login`, `/quotes/new` статичні, `/api/leads`,
   `/api/n8n/[event]`, `/dashboard`, `/dashboard/leads/[id]`, `/quotes/[id]` динамічні, плюс Proxy
   (Middleware). «Build Completed [21s]», деплой ~40 с разом із кешем 165 MB.
-- **Playwright:** <TODO>
+- **Playwright:** знімок «до» (нова сесія, лише `playwright`, deny ще не додано) — 25 інструментів,
+  включно з `browser_run_code_unsafe`. Після додавання `deny`/`allow` у `.claude/settings.json`,
+  перевірка форми: нова сесія, лише `playwright`, `supabase` вимкнено, `npm run dev` запущено. Промпт
+  — рівно з walkthrough. Ланцюжок викликів: `browser_navigate` → `browser_snapshot` →
+  `browser_console_messages`/`browser_network_requests` (стан сторінки) → `browser_fill_form` (усі 8
+  текстових полів і бюджет одним викликом) → повторний `browser_snapshot` (перевірка значень) →
+  `browser_click` (сабміт) → `browser_snapshot`/`browser_console_messages`/`browser_network_requests`
+  (результат) → `browser_network_request` ×3 (деталі POST-запиту: заголовки, тіло, відповідь) →
+  `browser_close`. Форма відправилась один раз (09:38:59 UTC): UI показав «Дякуємо! Заявку
+  отримано.», один новий мережевий запит — `POST http://localhost:3000/` (Server Action, 200 OK,
+  192 ms, відповідь `{"status":"ok"}`, без ID ліда й персональних даних у відповіді), 0 запитів на
+  інші origin, консоль — 0 errors/warnings за всю сесію. Знімок «після» — 21 інструмент: зникли рівно
+  `browser_run_code_unsafe`, `browser_file_upload`, `browser_drop`, `browser_evaluate` (ті, що під
+  `deny`), решта 21 без змін.
 - Що агент зробив сам, без прохання: після запиту про роль сам пояснив, що `postgres` обходить RLS
   і володіє схемою, і запропонував дописати `&read_only=true` в `.mcp.json`, попередньо сказавши,
   що сам файл не чіпатиме без явного «так». Пропозицію не прийняли: профіль «build» навмисно без
   `read_only=true` (інакше `apply_migration` недоступний), а звужений `read_only=true`-профіль —
   окремий URL для Task C, не для цього `.mcp.json`. У сесії Vercel агент сам викликав
   `list_teams`, коли пошук проєкту в особистому скоупі нічого не дав. Так радить інструкція
-  вендора «discover teams then projects». Результат лишився в чаті, у файли не потрапив.
+  вендора «discover teams then projects». Результат лишився в чаті, у файли не потрапив. У сесії
+  Playwright агент сам, без прохання, прочитав `app/actions.ts`, `lib/n8n/client.ts` і `lib/db.ts`
+  через `Bash`/`Read` (не через `playwright`), щоб пояснити, що відбувається на сервері після
+  `{"status":"ok"}` у відповіді — зокрема серверний виклик `triggerWorkflow` до n8n в `after()`,
+  невидимий із браузера. `.env.local` при цьому не відкривав.
 
 ## Task E (бонус)
 
