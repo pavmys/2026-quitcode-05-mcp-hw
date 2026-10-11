@@ -59,11 +59,47 @@ cmp materials/leads.json mcp/leaddesk-server/fixtures/leads.json && echo "fixtur
 
 ## Task B — що зробили агенти з серверами
 
-- **Supabase:** <TODO>
-- **Vercel:** <TODO>
-- **Figma:** <TODO>
+- **Supabase:** нова сесія, у `/mcp` увімкнено лише `supabase` (9 інструментів). Агент зробив рівно
+  чотири виклики, усі схвалено вручну, нічого не відхилено:
+  1. `apply_migration` — створив `public.leads` (поля за `materials/leads.json`, `status` з
+     `check`-обмеженням на 5 значень, RLS увімкнено без жодної policy) →
+     `supabase/migrations/0001_leaddesk.sql`.
+  2. `execute_sql` — один `insert` на 20 рядків (`lead_0001`–`lead_0020`, ті самі дані, що в
+     `materials/leads.json`) → той самий SQL збережено в `supabase/seed/leads.sql`.
+  3. `list_migrations` — перевірка, що міграція застосувалась.
+  4. `execute_sql` — опціональний запит `select current_user, session_user,
+     current_setting('is_superuser');`. Результат: `current_user = postgres`, `session_user =
+     postgres`, `is_superuser = off`. Формально не суперкористувач, але роль володіє схемою
+     `public` (тому й змогла виконати міграцію) і має `BYPASSRLS` — RLS на `leads` блокує лише
+     публічні ролі `anon`/`authenticated`, агента через MCP не обмежує нічим. count(*) з таблиці
+     підтверджено вручну через дашборд Supabase — 20 рядків.
+- **Vercel:** форк підключено до нового проєкту Vercel через git-інтеграцію в дашборді (не через
+  `deploy_to_vercel`). Деплой зібрався автоматично з `main`, коміт `958d2ee`, production, стан
+  `READY`. Запит до агента: «Знайди останній деплой мого проєкту LeadDesk у Vercel і покажи лог його
+  білду. Нічого не деплой і не змінюй». Агент викликав лише інструменти читання:
+  `list_projects` → `list_teams` (щоб знайти скоуп) → `list_projects` у скоупі →
+  `list_deployments` (`limit: 1`) → `list_deployment_events` (`builds: 1`, `limit: -1`). З цього
+  ланцюжка в `allow` є лише `list_deployments`; решту чотири схвалено вручну по одному, бо вони не
+  потрапляють ні в `allow`, ні в `deny`. Жодного інструмента, що змінює стан, не викликано. Інструменту
+  `get_deployment_build_logs` із нашого `allow` цей сервер не надає: лог прийшов через
+  `list_deployment_events`. Перша спроба нічого не знайшла, бо OAuth-сесія була прив'язана до
+  іншого акаунта Vercel. Після `/mcp` → очищення автентифікації й повторного входу проєкт знайшовся.
+  Лог → `docs/mcp/evidence/vercel-build-log.txt`: власника/репозиторій і назву пакета замінено на
+  `<redacted>`, ID команди/проєкту/деплою й URL `*.vercel.app` прибрано. Що в лозі: білд у `iad1`
+  (2 cores, 8 GB) без кешу; `npm install` — 493 пакети з попередженнями про застарілі `rimraf`,
+  `glob`, `inflight`, `eslint@9.39.5` і про несхвалений postinstall `unrs-resolver`; Next.js 16.3.5
+  (Turbopack) скомпілював за 7.7 с, TypeScript — 2.5 с; 8 статичних сторінок, серед них журнал
+  застосунку `db:listUsers: 1`; маршрути `/`, `/login`, `/quotes/new` статичні, `/api/leads`,
+  `/api/n8n/[event]`, `/dashboard`, `/dashboard/leads/[id]`, `/quotes/[id]` динамічні, плюс Proxy
+  (Middleware). «Build Completed [21s]», деплой ~40 с разом із кешем 165 MB.
 - **Playwright:** <TODO>
-- Що агент зробив сам, без прохання: <TODO>
+- Що агент зробив сам, без прохання: після запиту про роль сам пояснив, що `postgres` обходить RLS
+  і володіє схемою, і запропонував дописати `&read_only=true` в `.mcp.json`, попередньо сказавши,
+  що сам файл не чіпатиме без явного «так». Пропозицію не прийняли: профіль «build» навмисно без
+  `read_only=true` (інакше `apply_migration` недоступний), а звужений `read_only=true`-профіль —
+  окремий URL для Task C, не для цього `.mcp.json`. У сесії Vercel агент сам викликав
+  `list_teams`, коли пошук проєкту в особистому скоупі нічого не дав. Так радить інструкція
+  вендора «discover teams then projects». Результат лишився в чаті, у файли не потрапив.
 
 ## Task E (бонус)
 
