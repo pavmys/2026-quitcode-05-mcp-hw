@@ -120,5 +120,28 @@ cmp materials/leads.json mcp/leaddesk-server/fixtures/leads.json && echo "fixtur
 
 ## Task E (бонус)
 
-- Варіант: <TODO — чи робимо E1/E2/E3>
-- <TODO>
+- **Варіант: E1 — свій сервер по HTTP із захистом Host/Origin.**
+- Рефакторинг: спільну фабрику (два інструменти, один ресурс) винесено з `server.mjs` у
+  `mcp/leaddesk-server/src/factory.mjs`, щоб її імпортували й stdio-, і HTTP-точки входу без
+  побічних ефектів (у `server.mjs` був top-level `await serveStdio(factory)`, тож просто імпортувати
+  з нього означало б одразу піднімати stdio-сервер). `server.mjs` тепер лише `serveStdio(factory)` з
+  імпортом; новий `src/http.mjs` — HTTP-точка входу. Перевірено Inspector'ом, що stdio-сервер
+  поводиться так само, як до рефакторингу (ті самі два інструменти з тими самими анотаціями).
+- Додано `"@modelcontextprotocol/node": "2.1.0"` (точна версія) у `mcp/leaddesk-server/package.json`
+  — дозволений виняток лише для цього варіанта.
+- Головна пастка підтвердилась на практиці: `localhostHostValidation()`/`localhostOriginValidation()`
+  довелося викликати вручну в обробнику запиту — опції на кшталт `toNodeHandler(handler, { hostCheck
+  : … })` в API просто немає, тож пропустити гварди легко, якщо йти за інтуїцією, а не точно за
+  прикладом walkthrough.
+- Сервер слухає лише `127.0.0.1:3333`. Чотири перевірки `curl` (тіло запиту — `tools/list` із повним
+  `_meta` простором імен `io.modelcontextprotocol/…`) — у
+  [`docs/mcp/evidence/e1-http-curl.txt`](evidence/e1-http-curl.txt):
+  1. звичайний запит → `200`, повертає обидва інструменти;
+  2. підроблений `Host: evil.example` → `403`, `{"error":{"code":-32000,"message":"Invalid Host: evil.example"}}`;
+  3. підроблений `Origin: https://evil.example` → `403`, `{"error":{"code":-32000,"message":"Invalid Origin: evil.example"}}`;
+  4. без заголовка `Mcp-Method` → `400`, `{"error":{"code":-32020,…}}` — тіло й заголовки
+     розійшлися, сервер про це прямо каже.
+- `body.json` не комітився: гененерувався і видалявся в межах перевірки (`.gitignore` також має
+  власний запис на цей файл, якщо створювати його в корені репозиторію).
+- `grep -rn 'console\.log' mcp/leaddesk-server/src` — 0 збігів; у `http.mjs` є один `console.error`
+  лише для повідомлення про старт (stderr, без персональних даних).

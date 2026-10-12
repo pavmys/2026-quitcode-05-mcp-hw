@@ -1,8 +1,10 @@
 # leaddesk-mcp-server
 
-Stdio MCP server for LeadDesk: two business verbs instead of SQL over the whole database.
-Data comes from `fixtures/leads.json` (a frozen copy of `materials/leads.json`, 20 leads) and is
-held only in the process's memory — the fixture file itself is never rewritten.
+MCP server for LeadDesk: two business verbs instead of SQL over the whole database. Two entrypoints
+share the same tools/resource (`src/factory.mjs`): `src/server.mjs` over stdio (the required mode)
+and `src/http.mjs` over HTTP with Host/Origin validation (Task E1, bonus). Data comes from
+`fixtures/leads.json` (a frozen copy of `materials/leads.json`, 20 leads) and is held only in the
+process's memory — the fixture file itself is never rewritten.
 
 ## Tools and resource
 
@@ -54,3 +56,15 @@ claude mcp add leaddesk -- node mcp/leaddesk-server/src/server.mjs
 
 For the Task C A/B comparison, the server is instead added from an empty directory outside the
 repo, with an absolute path to `src/server.mjs` — see `docs/walkthrough.md`, Task C.
+
+## HTTP mode (Task E1, bonus)
+
+```bash
+node mcp/leaddesk-server/src/http.mjs   # listens on 127.0.0.1:3333/mcp only
+```
+
+`toNodeHandler` (from `@modelcontextprotocol/node`) doesn't take the Host/Origin guards as an
+option — passing them that way is silently ignored, so they're invoked explicitly in `http.mjs`
+before the request reaches the MCP handler. Evidence (4 `curl` checks — normal request, spoofed
+`Host`, spoofed `Origin`, missing `Mcp-Method` header) is in
+[`docs/mcp/evidence/e1-http-curl.txt`](../../docs/mcp/evidence/e1-http-curl.txt).
